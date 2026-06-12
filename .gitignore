@@ -15,3 +15,5 @@ static/output.css
 .pytest_cache/
 .ruff_cache/
 frontend/src/routeTree.gen.ts
+.rest.local/
+.playwright-mcp/

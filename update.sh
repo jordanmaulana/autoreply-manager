@@ -22,3 +22,6 @@ docker compose --env-file .env.docker exec -T backend uv run manage.py migrate -
 
 echo "==> done"
 docker compose --env-file .env.docker ps
+
+# Ops note: refresh IG/Threads long-lived tokens daily via cron (they die after ~60 days):
+#   docker compose --env-file .env.docker exec -T backend uv run manage.py refresh_tokens

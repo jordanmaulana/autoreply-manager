@@ -7,10 +7,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 load_dotenv(BASE_DIR / ".env", override=True)
 
-SECRET_KEY = os.environ.get(
-    "SECRET_KEY",
-    "django-insecure-CHANGE-ME-IN-PROD",
-)
+SECRET_KEY = os.environ.get("SECRET_KEY") or "django-insecure-CHANGE-ME-IN-PROD"
 
 DEBUG = os.environ.get("DEBUG", "True").lower() == "true"
 
@@ -77,31 +74,19 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "core.wsgi.application"
 
-if os.environ.get("POSTGRES_HOST"):
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": os.environ["POSTGRES_DB"],
-            "USER": os.environ["POSTGRES_USER"],
-            "PASSWORD": os.environ["POSTGRES_PASSWORD"],
-            "HOST": os.environ["POSTGRES_HOST"],
-            "PORT": os.environ.get("POSTGRES_PORT", "5432"),
-            "CONN_MAX_AGE": 60,
-            "CONN_HEALTH_CHECKS": False,
-        }
+# Postgres only (pgvector is required for RAG). Dev: `make db` runs a pgvector container.
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.environ.get("POSTGRES_DB", "app"),
+        "USER": os.environ.get("POSTGRES_USER", "app"),
+        "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "app"),
+        "HOST": os.environ.get("POSTGRES_HOST", "localhost"),
+        "PORT": os.environ.get("POSTGRES_PORT", "5432"),
+        "CONN_MAX_AGE": 60,
+        "CONN_HEALTH_CHECKS": False,
     }
-else:
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / "db.sqlite3",
-            "OPTIONS": {
-                "init_command": "PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;",
-                "transaction_mode": "IMMEDIATE",
-                "timeout": 30,
-            },
-        }
-    }
+}
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
@@ -134,13 +119,23 @@ PAYMENT_REDIRECT_URL = os.environ.get("PAYMENT_REDIRECT_URL", "http://localhost:
 
 GOOGLE_OAUTH_CLIENT_ID = os.environ.get("GOOGLE_OAUTH_CLIENT_ID", "")
 
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
+OPENAI_EMBEDDING_MODEL = os.environ.get("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
+OPENAI_CHAT_MODEL = os.environ.get("OPENAI_CHAT_MODEL", "gpt-4o-mini")
+
+INSTAGRAM_APP_ID = os.environ.get("INSTAGRAM_APP_ID", "")
+INSTAGRAM_APP_SECRET = os.environ.get("INSTAGRAM_APP_SECRET", "")
+THREADS_APP_ID = os.environ.get("THREADS_APP_ID", "")
+THREADS_APP_SECRET = os.environ.get("THREADS_APP_SECRET", "")
+WHATSAPP_APP_SECRET = os.environ.get("WHATSAPP_APP_SECRET", "")
+META_WEBHOOK_VERIFY_TOKEN = os.environ.get("META_WEBHOOK_VERIFY_TOKEN", "")
+THREADS_POLL_SECONDS = int(os.environ.get("THREADS_POLL_SECONDS", "60"))
+
 SITE_URL = os.environ.get("SITE_URL", "http://localhost:8000").rstrip("/")
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173").rstrip("/")
 
 CORS_ALLOWED_ORIGINS = [
-    o.strip()
-    for o in os.environ.get("DJANGO_CORS_ALLOWED_ORIGINS", "").split(",")
-    if o.strip()
+    o.strip() for o in os.environ.get("DJANGO_CORS_ALLOWED_ORIGINS", "").split(",") if o.strip()
 ]
 CSRF_TRUSTED_ORIGINS = list(CORS_ALLOWED_ORIGINS)
 

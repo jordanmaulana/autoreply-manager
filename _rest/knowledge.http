@@ -1,0 +1,49 @@
+@host = http://localhost:8000
+@token = {{$dotenv DRF_TOKEN}}
+
+### List knowledge
+GET {{host}}/api/v1/knowledge/
+Authorization: Token {{token}}
+
+### Create knowledge (embedding starts in background; poll GET until status=ready)
+POST {{host}}/api/v1/knowledge/
+Authorization: Token {{token}}
+Content-Type: application/json
+
+{
+  "title": "Toko Kopi FAQ",
+  "description": "Kami buka setiap hari pukul 08.00-22.00 WIB.\n\nMenu andalan: kopi susu gula aren (Rp 18.000), americano (Rp 15.000), croissant (Rp 25.000).\n\nAlamat: Jl. Sudirman No. 1, Jakarta. Dekat halte TransJakarta Bundaran HI.\n\nKami menerima pesanan grosir untuk acara kantor, minimal 20 cup, diskon 10%.",
+  "persona": "Ramah dan singkat, selalu sapa dengan 'Kak'."
+}
+
+### Get one (watch status: pending -> processing -> ready)
+GET {{host}}/api/v1/knowledge/REPLACE_ID/
+Authorization: Token {{token}}
+
+### Update (re-embeds only when description text actually changed)
+PUT {{host}}/api/v1/knowledge/REPLACE_ID/
+Authorization: Token {{token}}
+Content-Type: application/json
+
+{
+  "title": "Toko Kopi FAQ",
+  "description": "Updated description here.",
+  "persona": ""
+}
+
+### Force rebuild (409 while already processing)
+POST {{host}}/api/v1/knowledge/REPLACE_ID/rebuild/
+Authorization: Token {{token}}
+
+### Debug RAG query (no message is sent anywhere)
+POST {{host}}/api/v1/knowledge/REPLACE_ID/query/
+Authorization: Token {{token}}
+Content-Type: application/json
+
+{
+  "question": "jam buka berapa?"
+}
+
+### Delete
+DELETE {{host}}/api/v1/knowledge/REPLACE_ID/
+Authorization: Token {{token}}

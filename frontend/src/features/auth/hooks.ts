@@ -1,8 +1,10 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useAtom } from "jotai";
 
-import { googleSignIn, logout, me } from "@/features/auth/api";
+import { emailLogin, emailRegister, googleSignIn, logout, me } from "@/features/auth/api";
 import { tokenAtom, userAtom } from "@/features/auth/state";
+
+export type EmailCredentials = { email: string; password: string };
 
 export function useMe() {
   const [token] = useAtom(tokenAtom);
@@ -18,6 +20,19 @@ export function useGoogleSignIn() {
   const [, setUser] = useAtom(userAtom);
   return useMutation({
     mutationFn: googleSignIn,
+    onSuccess: (res) => {
+      setToken(res.token);
+      setUser(res.user);
+    },
+  });
+}
+
+export function useEmailAuth(mode: "login" | "register") {
+  const [, setToken] = useAtom(tokenAtom);
+  const [, setUser] = useAtom(userAtom);
+  return useMutation({
+    mutationFn: ({ email, password }: EmailCredentials) =>
+      mode === "login" ? emailLogin(email, password) : emailRegister(email, password),
     onSuccess: (res) => {
       setToken(res.token);
       setUser(res.user);

@@ -1,0 +1,42 @@
+@host = http://localhost:8000
+@token = {{$dotenv DRF_TOKEN}}
+
+### List connected accounts
+GET {{host}}/api/v1/accounts/
+Authorization: Token {{token}}
+
+### Get Instagram OAuth URL (open the returned url in a browser)
+GET {{host}}/api/v1/accounts/instagram/connect/
+Authorization: Token {{token}}
+
+### Get Threads OAuth URL
+GET {{host}}/api/v1/accounts/threads/connect/
+Authorization: Token {{token}}
+
+### Connect WhatsApp (paste WABA credentials from Meta Business Manager)
+POST {{host}}/api/v1/accounts/whatsapp/
+Authorization: Token {{token}}
+Content-Type: application/json
+
+{
+  "phone_number_id": "REPLACE_PHONE_NUMBER_ID",
+  "access_token": "REPLACE_PERMANENT_SYSTEM_USER_TOKEN"
+}
+
+### Link knowledge to an account / toggle auto-reply
+PATCH {{host}}/api/v1/accounts/REPLACE_ACCOUNT_ID/
+Authorization: Token {{token}}
+Content-Type: application/json
+
+{
+  "knowledge_id": "REPLACE_KNOWLEDGE_ID",
+  "auto_reply_enabled": true
+}
+
+### Disconnect
+DELETE {{host}}/api/v1/accounts/REPLACE_ACCOUNT_ID/
+Authorization: Token {{token}}
+
+### Reply logs (filter: ?account=<id>&status=sent|failed|skipped)
+GET {{host}}/api/v1/replies/?limit=20
+Authorization: Token {{token}}

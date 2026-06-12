@@ -7,8 +7,8 @@ import { ApiError } from "@/lib/api";
 import { me } from "@/features/auth/api";
 import { tokenAtom, userAtom } from "@/features/auth/state";
 
-const PUBLIC_PATHS = new Set(["/", "/login"]);
-const FULL_BLEED_PATHS = new Set([...PUBLIC_PATHS, "/onboarding"]);
+// "/" is a splash that always redirects; only "/login" is reachable without a token.
+const SPLASH_PATHS = new Set(["/", "/login"]);
 
 export function AuthGate() {
   const [token, setToken] = useAtom(tokenAtom);
@@ -39,20 +39,16 @@ export function AuthGate() {
 
   useEffect(() => {
     if (!token) {
-      if (!PUBLIC_PATHS.has(pathname)) navigate({ to: "/login" });
+      if (pathname !== "/login") navigate({ to: "/login" });
       return;
     }
     if (!user) return;
-    if (!user.onboarded && pathname !== "/onboarding") {
-      navigate({ to: "/onboarding" });
-      return;
-    }
-    if (user.onboarded && (PUBLIC_PATHS.has(pathname) || pathname === "/onboarding")) {
+    if (SPLASH_PATHS.has(pathname)) {
       navigate({ to: "/dashboard" });
     }
   }, [token, user, pathname, navigate]);
 
-  if (!token || !user || FULL_BLEED_PATHS.has(pathname)) {
+  if (!token || !user || SPLASH_PATHS.has(pathname)) {
     return <Outlet />;
   }
   return <AppShell />;

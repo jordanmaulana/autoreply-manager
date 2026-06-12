@@ -1,0 +1,28 @@
+@host = http://localhost:8000
+@token = {{$dotenv DRF_TOKEN}}
+
+### Register with email + password (returns token, 201)
+POST {{host}}/api/v1/auth/register/
+Content-Type: application/json
+
+{
+  "email": "someone@example.com",
+  "password": "S3cure-pass!"
+}
+
+### Login with email + password (returns token, 200)
+POST {{host}}/api/v1/auth/login/
+Content-Type: application/json
+
+{
+  "email": "someone@example.com",
+  "password": "S3cure-pass!"
+}
+
+### Current user
+GET {{host}}/api/v1/auth/me/
+Authorization: Token {{token}}
+
+### Logout (destroys token)
+POST {{host}}/api/v1/auth/logout/
+Authorization: Token {{token}}

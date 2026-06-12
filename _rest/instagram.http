@@ -1,0 +1,70 @@
+@token = 
+# NOTE: DZJWGqcvo0C is a post shortcode, not a Graph API media ID.
+# Run "Get media list" below and copy the numeric id (e.g. 17895695668004550) here.
+@IG_MEDIA_ID = 
+@IG_COMMENT_ID = 
+@RECIPIENT_ID = 
+
+### Reply DM
+POST https://graph.instagram.com/v22.0/me/messages
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "recipient": {
+    "id": "{{RECIPIENT_ID}}"
+  },
+  "message": {
+    "text": "Hello, this is a test message from the Instagram API!"
+  }
+}
+
+
+### Get media list (find numeric media ID for IG_MEDIA_ID)
+GET https://graph.instagram.com/v22.0/me/media?fields=id,caption,permalink,timestamp
+Authorization: Bearer {{token}}
+
+
+### Get comments on media (copy comment id into IG_COMMENT_ID)
+GET https://graph.instagram.com/v22.0/{{IG_MEDIA_ID}}/comments?fields=id,text,username,timestamp,replies
+Authorization: Bearer {{token}}
+
+
+### Reply to comment (public, nested under the comment)
+POST https://graph.instagram.com/v22.0/{{IG_COMMENT_ID}}/replies
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "message": "Thanks for sharing!"
+}
+
+
+### Private reply to commenter (DM, one per comment, within 7 days)
+POST https://graph.instagram.com/v22.0/me/messages
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "recipient": {
+    "comment_id": "{{IG_COMMENT_ID}}"
+  },
+  "message": {
+    "text": "Hi! Replying to your comment privately."
+  }
+}
+
+
+### Hide comment (set false to unhide)
+POST https://graph.instagram.com/v22.0/{{IG_COMMENT_ID}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "hide": true
+}
+
+
+### Delete comment
+DELETE https://graph.instagram.com/v22.0/{{IG_COMMENT_ID}}
+Authorization: Bearer {{token}}
