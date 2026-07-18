@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rtk grep *)",
+      "Bash(rtk ls *)",
+      "Bash(rtk read *)",
+      "Bash(rtk find *)",
+      "Bash(grep -rnE \"^\\\\s*\\\\.\\\\.\\\\.\\\\s*$\" --include=\"*.py\" core api)",
+      "Bash(grep -rnE \"^\\\\s*pass\\\\s*\\(#.*\\)?$\" --include=\"*.py\" core api)",
+      "Bash(grep -rnE \"return Response\\\\\\(\\\\{\\\\}|return Response\\\\\\(\\\\[\\\\]|return None|return$\" --include=\"*.py\" api)"
+    ]
+  }
+}

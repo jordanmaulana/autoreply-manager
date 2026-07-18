@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -29,6 +30,11 @@ def knowledge_list(request):
         qs = Knowledge.objects.filter(actor=request.user).order_by("-created_on")
         return Response(KnowledgeSerializer(qs, many=True).data)
 
+    if Knowledge.objects.filter(actor=request.user).count() >= settings.MAX_KNOWLEDGE_PER_USER:
+        return Response(
+            {"detail": f"Knowledge base limit reached ({settings.MAX_KNOWLEDGE_PER_USER})."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
     serializer = KnowledgeSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     if error := _validate_description_size(serializer.validated_data["description"]):

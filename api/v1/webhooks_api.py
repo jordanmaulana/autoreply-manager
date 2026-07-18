@@ -3,7 +3,7 @@ import threading
 
 from django.conf import settings
 from django.http import HttpResponse
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
@@ -51,6 +51,7 @@ def _webhook(request, platform: str, app_secret: str, parse):
 
 @api_view(["GET", "POST"])
 @permission_classes([AllowAny])
+@throttle_classes([])  # Meta delivers bursts + retries; rate-limiting would drop real events
 def instagram_webhook(request):
     return _webhook(
         request,
@@ -62,6 +63,7 @@ def instagram_webhook(request):
 
 @api_view(["GET", "POST"])
 @permission_classes([AllowAny])
+@throttle_classes([])  # Meta delivers bursts + retries; rate-limiting would drop real events
 def whatsapp_webhook(request):
     return _webhook(
         request,

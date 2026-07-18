@@ -41,6 +41,20 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.UserRateThrottle",
+        "rest_framework.throttling.AnonRateThrottle",
+    ],
+    # NOTE: throttling counts in Django's cache. No CACHES is configured, so this
+    # uses per-process LocMemCache — with N gunicorn workers the effective limit is
+    # ~rate*N and it resets on restart. Fine for MVP; move to a shared DB/Redis cache
+    # before this needs to hold against real abuse. Webhooks opt out via
+    # @throttle_classes([]) so Meta/Mayar retry bursts aren't dropped.
+    "DEFAULT_THROTTLE_RATES": {
+        "user": os.environ.get("THROTTLE_USER_RATE", "120/min"),
+        "anon": os.environ.get("THROTTLE_ANON_RATE", "20/min"),
+        "auth": os.environ.get("THROTTLE_AUTH_RATE", "10/min"),
+    },
 }
 
 MIDDLEWARE = [
@@ -122,6 +136,11 @@ GOOGLE_OAUTH_CLIENT_ID = os.environ.get("GOOGLE_OAUTH_CLIENT_ID", "")
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 OPENAI_EMBEDDING_MODEL = os.environ.get("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
 OPENAI_CHAT_MODEL = os.environ.get("OPENAI_CHAT_MODEL", "gpt-4o-mini")
+
+# Per-user quotas (soft caps; counts are approximate under concurrent workers).
+MAX_KNOWLEDGE_PER_USER = int(os.environ.get("MAX_KNOWLEDGE_PER_USER", "20"))
+MAX_ACCOUNTS_PER_USER = int(os.environ.get("MAX_ACCOUNTS_PER_USER", "10"))
+MAX_REPLIES_PER_MONTH = int(os.environ.get("MAX_REPLIES_PER_MONTH", "1000"))
 
 INSTAGRAM_APP_ID = os.environ.get("INSTAGRAM_APP_ID", "")
 INSTAGRAM_APP_SECRET = os.environ.get("INSTAGRAM_APP_SECRET", "")

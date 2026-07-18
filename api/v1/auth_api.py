@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 from rest_framework import status
 from rest_framework.authtoken.models import Token
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
@@ -12,6 +12,7 @@ from api.v1.serializers import (
     GoogleAuthSerializer,
     UserSerializer,
 )
+from api.v1.throttles import AuthRateThrottle
 
 User = get_user_model()
 
@@ -26,6 +27,7 @@ def _auth_response(user, created=False):
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
+@throttle_classes([AuthRateThrottle])
 def google(request):
     serializer = GoogleAuthSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
@@ -41,6 +43,7 @@ def google(request):
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
+@throttle_classes([AuthRateThrottle])
 def register(request):
     serializer = EmailRegisterSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
@@ -61,6 +64,7 @@ def register(request):
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
+@throttle_classes([AuthRateThrottle])
 def login(request):
     serializer = EmailLoginSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)

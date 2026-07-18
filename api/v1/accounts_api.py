@@ -1,6 +1,7 @@
 import logging
 from urllib.parse import urlencode
 
+from django.conf import settings
 from django.core import signing
 from django.shortcuts import get_object_or_404, redirect
 from rest_framework import status
@@ -19,6 +20,16 @@ OAUTH_PLATFORMS = {
     SocialAccount.Platform.INSTAGRAM: instagram,
     SocialAccount.Platform.THREADS: threads,
 }
+
+
+def _account_limit_reached(user, platform, platform_user_id) -> bool:
+    """True only when adding a genuinely new account would exceed the per-user cap.
+    Reconnecting an already-owned account (update path) is always allowed."""
+    if SocialAccount.objects.filter(
+        platform=platform, platform_user_id=platform_user_id, actor=user
+    ).exists():
+        return False
+    return SocialAccount.objects.filter(actor=user).count() >= settings.MAX_ACCOUNTS_PER_USER
 
 
 @api_view(["GET"])
@@ -67,6 +78,9 @@ def callback(request, platform):
         logger.exception("%s oauth callback failed", platform)
         return bounce(error=str(exc)[:200])
 
+    if _account_limit_reached(user, platform, data["platform_user_id"]):
+        return bounce(error=f"Account limit reached ({settings.MAX_ACCOUNTS_PER_USER}).")
+
     SocialAccount.objects.update_or_create(
         platform=platform,
         platform_user_id=data["platform_user_id"],
@@ -87,6 +101,12 @@ def whatsapp_connect(request):
     serializer.is_valid(raise_exception=True)
     phone_number_id = serializer.validated_data["phone_number_id"]
     access_token = serializer.validated_data["access_token"]
+
+    if _account_limit_reached(request.user, SocialAccount.Platform.WHATSAPP, phone_number_id):
+        return Response(
+            {"detail": f"Account limit reached ({settings.MAX_ACCOUNTS_PER_USER})."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
 
     try:
         profile = whatsapp.fetch_phone_profile(phone_number_id, access_token)

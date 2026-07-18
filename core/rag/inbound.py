@@ -1,6 +1,8 @@
 import logging
 
+from django.conf import settings
 from django.db import IntegrityError, close_old_connections
+from django.utils import timezone
 
 from core.models import ReplyLog, SocialAccount
 from core.rag.answer import SkipReply, generate_reply
@@ -36,6 +38,20 @@ def handle_inbound(
     if not account.auto_reply_enabled:
         log.status = ReplyLog.Status.SKIPPED
         log.error = "Auto-reply is disabled for this account."
+        log.save(update_fields=["status", "error", "updated_on"])
+        return
+
+    # Gate the expensive OpenAI call behind a monthly per-owner quota. The ReplyLog
+    # row is already persisted above, so idempotency + audit trail are preserved.
+    month_start = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    sent_this_month = ReplyLog.objects.filter(
+        account__actor=account.actor,
+        status=ReplyLog.Status.SENT,
+        created_on__gte=month_start,
+    ).count()
+    if sent_this_month >= settings.MAX_REPLIES_PER_MONTH:
+        log.status = ReplyLog.Status.SKIPPED
+        log.error = "Monthly reply quota reached."
         log.save(update_fields=["status", "error", "updated_on"])
         return
 
